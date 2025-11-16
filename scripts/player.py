@@ -7,6 +7,88 @@ from scripts.entity import HurtableEntity
 from scripts.projectile import *
 from scripts.weapon import *
 
+vec2 = pygame.math.Vector2
+
+#Scarf visual effect
+class Scarf:
+    def __init__(self, x, y, segment_length, num_segments, color=(255, 0, 0), outline_color=(0, 0, 0)):
+        self.segment_length = segment_length
+        self.num_segments = num_segments
+        self.color = color
+        self.outline_color = outline_color
+        self.pos_update = 0.8
+
+        self.time_passed = 0 
+        self.surface = pygame.Surface((60, 60))
+        #self.surface.set_colorkey((0, 0, 0))
+
+        self.scarf = []
+        for i in range(num_segments):
+            self.scarf.append(vec2(x, y))
+    
+    def draw(self, surf, scroll):
+        scroll_vec = vec2(scroll)
+        offset_vec = vec2(30, 30)
+        self.surface.fill((0, 0, 0))
+        for i in range(self.num_segments-1):
+            index = i+1
+
+            #pygame.draw.line(surf, self.outline_color, self.scarf[index-1]-scroll_vec, self.scarf[index]-scroll_vec, 5)
+            #pygame.draw.line(surf, self.color, self.scarf[index-1]-scroll_vec, self.scarf[index]-scroll_vec, 3)
+
+            pygame.draw.line(self.surface, self.color, (self.scarf[index-1]-self.scarf[0])+offset_vec, (self.scarf[index]-self.scarf[0])+offset_vec, 3)
+        
+        E.perfect_outline(self.surface, surf, (self.scarf[0].x-30-scroll[0], self.scarf[0].y-30-scroll[1]), self.outline_color)
+        surf.blit(self.surface, (self.scarf[0].x-30-scroll[0], self.scarf[0].y-30-scroll[1])) 
+    
+    def wind(self, index, t, amplitude):
+        return math.sin(t * 0.05 + index * 0.5) * amplitude
+    
+    def apply_wind(self, amplitude):
+        # Apply some wind to the scarf
+        for i in range(1, self.num_segments):
+            wind_value = self.wind(i, self.time_passed, amplitude)
+            self.scarf[i].y += wind_value
+    
+    def apply_gravity(self):
+        for i in range(self.num_segments-1):
+            self.scarf[i+1].y += 0.1
+    
+    def update(self, pos, flipped):
+        pos_vec = vec2(pos[0], pos[1])
+
+        if flipped:
+            extend_dir = 1
+        else:
+            extend_dir = -1
+
+        self.scarf[0] = pos_vec
+
+        for i in range(1, self.num_segments):
+            direction = self.scarf[i] - self.scarf[i-1]
+            distance = direction.length()
+
+            if distance > self.segment_length:
+                direction.scale_to_length(self.segment_length)
+                if(distance > self.segment_length*2):
+                    self.scarf[i] -= direction * 1.1
+                else:
+                    self.scarf[i] -= direction * self.pos_update
+            
+            
+            #if distance < self.segment_length*0.8:
+                #self.scarf[i].x += 2*extend_dir
+            
+            """
+            if abs(pos_vec.y-self.scarf[i].y) > 6:
+                diff = pos_vec.y-self.scarf[i].y
+                if diff < 0:
+                    self.scarf[i].y -= 1
+                else:
+                    self.scarf[i].y += 1"""
+
+        self.time_passed += 1
+
 TILESIZE = 16
 
 class Player(HurtableEntity):
@@ -15,7 +97,6 @@ class Player(HurtableEntity):
 
         self.game = game
         
-
         self.attacking = False
         self.flip = False
         self.weapon = None
@@ -54,6 +135,8 @@ class Player(HurtableEntity):
         self.throw_timer = E.Timer(0.05)
         self.can_throw = True
         self.projectile_data = {}
+
+        self.scarf = Scarf(x, y, 9, 6, (236, 39, 63), (107, 4, 37)) #Outline (107, 4, 37)
 
     def boost(self):
         self.speed_boost = True
@@ -406,6 +489,7 @@ class Player(HurtableEntity):
         if self.state == "wall_slide" and self.flip:
             offset_x = 2
         
+        self.scarf.draw(surf, scroll)
         if not self.leaping:
             E.perfect_outline(pygame.transform.flip(self.image, self.flip, False), surf, (self.rect.x+offset_x-scroll[0],self.rect.y-scroll[1]-3), (20, 20, 20))
             surf.blit(pygame.transform.flip(self.image, self.flip, False), (self.rect.x+offset_x-scroll[0],self.rect.y-scroll[1]-3))
@@ -416,6 +500,19 @@ class Player(HurtableEntity):
     def update(self, tiles):
         super().update()
         self.move(tiles)
+        for i in range(5):
+            self.scarf.apply_wind(0.025)
+
+        if not self.flip:
+            self.scarf.update([self.rect.x+4, self.rect.y+7], self.flip)
+        else:
+            self.scarf.update([self.rect.right-5, self.rect.y+7], self.flip)
+
+        if self.speed_boost:
+            self.scarf.pos_update = 0.8
+        else:
+            self.scarf.pos_update = 0.65
+
         self.speed_boost_timer.update()
         self.throw_timer.update()
         self.ability_timer.update()
