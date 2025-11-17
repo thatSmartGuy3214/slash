@@ -50,10 +50,18 @@ class Scarf:
             wind_value = self.wind(i, self.time_passed, amplitude)
             self.scarf[i].y += wind_value
     
-    def apply_gravity(self):
+    def apply_gravity(self, grav=0.1):
         for i in range(self.num_segments-1):
-            self.scarf[i+1].y += 0.1
+            self.scarf[i+1].y += grav
     
+    def apply_force_left(self, value):
+        for i in range(self.num_segments-1):
+            self.scarf[i+1].x -= value
+
+    def apply_force_right(self, value):
+        for i in range(self.num_segments-1):
+            self.scarf[i+1].x += value
+
     def update(self, pos, flipped):
         pos_vec = vec2(pos[0], pos[1])
 
@@ -76,8 +84,8 @@ class Scarf:
                     self.scarf[i] -= direction * self.pos_update
             
             
-            #if distance < self.segment_length*0.8:
-                #self.scarf[i].x += 2*extend_dir
+            if distance < self.segment_length*0.8:
+                self.scarf[i].x += 0.5*extend_dir
             
             """
             if abs(pos_vec.y-self.scarf[i].y) > 6:
@@ -110,7 +118,7 @@ class Player(HurtableEntity):
 
         self.on_wall = False
         self.wall_jumping = False
-        self.wall_jump_timer = E.Timer(0.28)
+        self.wall_jump_timer = E.Timer(0.30)
         self.wall_jump_speed = self.vel
         self.direction = 1
 
@@ -137,6 +145,7 @@ class Player(HurtableEntity):
         self.projectile_data = {}
 
         self.scarf = Scarf(x, y, 9, 6, (236, 39, 63), (107, 4, 37)) #Outline (107, 4, 37)
+        self.push_down_timer = E.Timer(0.23) # Apply some downward force to the scarf when the player lands on the ground
 
     def boost(self):
         self.speed_boost = True
@@ -180,7 +189,6 @@ class Player(HurtableEntity):
         self.animation.set_frame_duration("run", frame_times["player"]["run"])
 
     def jump(self):
-
         if self.leaping or self.rolling:
             return
         
@@ -235,7 +243,6 @@ class Player(HurtableEntity):
             self.wall_jump_timer.set() 
     
     def leap(self):
-        
         if not self.grounded or self.rolling:
             return
 
@@ -367,6 +374,7 @@ class Player(HurtableEntity):
                     self.animation.set_frame(2)
             else:
                 self.grounded = False
+                self.push_down_timer.set()
 
             if self.collisions["top"]:
                 self.vel_y = 1
@@ -500,6 +508,16 @@ class Player(HurtableEntity):
     def update(self, tiles):
         super().update()
         self.move(tiles)
+
+        if self.grounded and not self.push_down_timer.timed_out():
+            for i in range(9):
+                self.scarf.apply_gravity(0.1)
+
+                if self.flip:
+                    self.scarf.apply_force_right(0.15)
+                else:
+                    self.scarf.apply_force_left(0.15)
+
         for i in range(5):
             self.scarf.apply_wind(0.025)
 
@@ -516,6 +534,7 @@ class Player(HurtableEntity):
         self.speed_boost_timer.update()
         self.throw_timer.update()
         self.ability_timer.update()
+        self.push_down_timer.update()
 
         if self.throw_timer.timed_out():
             self.can_throw = True
