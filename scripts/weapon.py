@@ -37,13 +37,14 @@ class Slash(SlashVFX):
             entity.damage(self.damage, self)
 
 class Weapon:
-    def __init__(self, image: pygame.Surface, data):
+    def __init__(self, name, image: pygame.Surface, data):
         surf = pygame.Surface((image.get_width()*2, image.get_height()))
         surf.blit(image, (image.get_width(), 0))
         surf.set_colorkey(image.get_colorkey())
 
         self.image = surf
         self.data = data
+        self.name = name
 
         self.dmg = data["damage"]
         self.crit_rate = data["crit_rate"]

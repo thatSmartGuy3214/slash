@@ -79,13 +79,13 @@ class Scarf:
             if distance > self.segment_length:
                 direction.scale_to_length(self.segment_length)
                 if(distance > self.segment_length*2):
-                    self.scarf[i] -= direction * 1.1
+                    self.scarf[i] -= direction * 1.5
                 else:
                     self.scarf[i] -= direction * self.pos_update
             
             
             if distance < self.segment_length*0.8:
-                self.scarf[i].x += 0.5*extend_dir
+                self.scarf[i].x += 0.8*extend_dir
             
             """
             if abs(pos_vec.y-self.scarf[i].y) > 6:
@@ -144,7 +144,7 @@ class Player(HurtableEntity):
         self.can_throw = True
         self.projectile_data = {}
 
-        self.scarf = Scarf(x, y, 9, 6, (236, 39, 63), (107, 4, 37)) #Outline (107, 4, 37)
+        self.scarf = Scarf(x, y, 6, 6, (236, 39, 63), (107, 4, 37)) #Outline (107, 4, 37)
         self.push_down_timer = E.Timer(0.23) # Apply some downward force to the scarf when the player lands on the ground
 
     def boost(self):
@@ -276,7 +276,7 @@ class Player(HurtableEntity):
             
             self.vel_y = 1
 
-    def move(self, tiles):
+    def move(self, tiles, l_ramps, r_ramps):
         if self.alive:
             speed_mult = 1.0
             if self.speed_boost:
@@ -352,7 +352,7 @@ class Player(HurtableEntity):
             if self.movement[0] == 0 and self.grounded:
                 self.state = "idle"
 
-            self.collisions = self.physics_obj.movement(self.movement, tiles, 1.0)
+            self.collisions = self.physics_obj.movement(self.movement, tiles, 1.0, l_ramps, r_ramps)
             self.rect.x = self.physics_obj.rect.x
             self.rect.y = self.physics_obj.rect.y
 
@@ -360,6 +360,7 @@ class Player(HurtableEntity):
                 self.vel_y = 1
                 self.jump_count = 0
                 self.grounded = True
+                self.on_wall = False
 
                 if not self.rolling:
                     self.animation.set_loop(True)
@@ -505,26 +506,27 @@ class Player(HurtableEntity):
             E.perfect_outline(pygame.transform.rotate(pygame.transform.flip(self.image, self.flip, False), self.leap_angle), surf, (self.rect.x+offset_x-scroll[0],self.rect.y-scroll[1]-3), (20, 20, 20))
             surf.blit(pygame.transform.rotate(pygame.transform.flip(self.image, self.flip, False), self.leap_angle), (self.rect.x+offset_x-scroll[0],self.rect.y-scroll[1]-3))
 
-    def update(self, tiles):
+    def update(self, tiles, l_ramps, r_ramps):
         super().update()
-        self.move(tiles)
+        self.move(tiles, l_ramps, r_ramps)
 
         if self.grounded and not self.push_down_timer.timed_out():
             for i in range(9):
                 self.scarf.apply_gravity(0.1)
 
+                """
                 if self.flip:
                     self.scarf.apply_force_right(0.15)
                 else:
-                    self.scarf.apply_force_left(0.15)
+                    self.scarf.apply_force_left(0.15)"""
 
         for i in range(5):
             self.scarf.apply_wind(0.025)
 
         if not self.flip:
-            self.scarf.update([self.rect.x+4, self.rect.y+7], self.flip)
+            self.scarf.update([self.rect.x+4, self.rect.y+8], self.flip)
         else:
-            self.scarf.update([self.rect.right-5, self.rect.y+7], self.flip)
+            self.scarf.update([self.rect.right-5, self.rect.y+8], self.flip)
 
         if self.speed_boost:
             self.scarf.pos_update = 0.8

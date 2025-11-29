@@ -1,3 +1,35 @@
-drone ai
-tweak movement for player
-add scarf effect
+Main mechanics
+-Add ultimate abilities
+
+Content
+- Add weapons
+- Add weapon characterisitics (some get steal life, some can cause bleeding, maybe add an elemental sword)
+- Add different throwables/projectiles
+- Draw a new tileset for a castle where the final boss will be
+- Add 4 to 5 new enemies
+- Add bosses
+
+Polish
+- Refine player movement
+- Refine player combat to feel more satisfying (vaegrant type effects and slow downs for attacks)
+- Sparks and particles everywhere with a cool lighting effect using shaders
+- Add a cool water shader for no good reason
+- Have a cool interactive leaf system for no good reason :)
+- Beautiful background
+- Maybe some pixel art god rays to add more beauty
+
+Combat:
+Fast paced and super satisfying.
+-Create a few enemies for testing both combat mechanics and refining enemy patterns and behaviour
+-Work on special moves architecture to make it easy to add them
+-Add Knockback and Pogoing
+-Like in vaegrant, make the player dash towards their target and slash them. (When player's speed has been boosted)
+-Then add juice(sound effects, particles, vfx)
+
+Todo:
+1. Combat
+2. Content
+3. Polish
+
+Deadline:
+January 2026 (5th to 15th)

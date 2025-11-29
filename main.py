@@ -7,8 +7,8 @@ pygame.joystick.init()
 
 class Game:
     def __init__(self):
-        display = pygame.Surface((352, 240))
-        self.window = scripts.Window(352*3, 240*3, "Slash", display)
+        display = pygame.Surface((400, 240))
+        self.window = scripts.Window(400*3, 240*3, "Slash", display)
         self.clock = pygame.time.Clock()
         self.joystick = None
         self.FPS = 60
