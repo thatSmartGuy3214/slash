@@ -275,6 +275,7 @@ class Player(HurtableEntity):
                 self.movement[0] = self.vel*1.3
             
             self.vel_y = 1
+            self.invulnerable = True
 
     def move(self, tiles, l_ramps, r_ramps):
         if self.alive:
@@ -481,6 +482,7 @@ class Player(HurtableEntity):
                 self.state = "idle"
                 self.rolling = False
                 self.animation.end_of_anim = False
+                self.invulnerable = False
                 if not self.speed_boost:
                     self.movement[0] = 0
                 else:
@@ -502,6 +504,7 @@ class Player(HurtableEntity):
         if not self.leaping:
             E.perfect_outline(pygame.transform.flip(self.image, self.flip, False), surf, (self.rect.x+offset_x-scroll[0],self.rect.y-scroll[1]-3), (20, 20, 20))
             surf.blit(pygame.transform.flip(self.image, self.flip, False), (self.rect.x+offset_x-scroll[0],self.rect.y-scroll[1]-3))
+
         else:
             E.perfect_outline(pygame.transform.rotate(pygame.transform.flip(self.image, self.flip, False), self.leap_angle), surf, (self.rect.x+offset_x-scroll[0],self.rect.y-scroll[1]-3), (20, 20, 20))
             surf.blit(pygame.transform.rotate(pygame.transform.flip(self.image, self.flip, False), self.leap_angle), (self.rect.x+offset_x-scroll[0],self.rect.y-scroll[1]-3))

@@ -71,7 +71,7 @@ class GameManager:
         self.current_battle_room = -1
 
         self.spawn_pos = [0, 0]
-        self.load_level("data/levels/debug2.lvl")
+        self.load_level("data/levels/debug_arena.lvl")
         self.player = Player(self, self.spawn_pos[0], self.spawn_pos[1], TILESIZE, TILESIZE, 3.4, 7.5, 0.32, 100)
         self.player.animation = self.game.assets.create_animation_object("player")
 
@@ -138,6 +138,12 @@ class GameManager:
 
             if obj["name"] == "drone":
                 self.enemies.append(Drone(self, obj["rect"][0], obj["rect"][1], TILESIZE*2, TILESIZE*2, self.game.assets.get_image("drone")))
+            
+            if obj["name"] == "Roller":
+                self.enemies.append(Roller(self, obj["rect"][0], obj["rect"][1], TILESIZE*3, TILESIZE*3))
+            
+            if obj["name"] == "Lazer Orb":
+                self.enemies.append(LazerOrb(self, obj["rect"][0], obj["rect"][1], TILESIZE, TILESIZE))
             
             if obj["name"] == "BattleRoom":
                 room = {"rect": pygame.Rect(obj["rect"]), "exits": [], "enemies": [], "wave_count": int(obj["properties"]["waves"])}
@@ -269,6 +275,7 @@ class GameManager:
                     self.player.jump()
 
         collision_rects = self.get_tiles_near_object([self.player.rect.x, self.player.rect.y], 3)
+        enemy_rects = []
         self.player.update(collision_rects[0], collision_rects[1], collision_rects[2])
 
         self.player.attacking = False
@@ -314,12 +321,21 @@ class GameManager:
                 #self.win_surf.blit(state, (self.player.rect.x-self.cam.scroll[0], self.player.rect.y - self.cam.scroll[1] - 15))
             elif layer == "enemies":
                 for i, enemy in sorted(enumerate(self.enemies), reverse=True):
-                    enemy.update(self.player, self.get_tiles_near_object([enemy.rect.x, enemy.rect.y], 2)[0])
+                    if enemy.enemy_type not in ["drone"]:
+                        rects = self.get_tiles_near_object([enemy.rect.x, enemy.rect.y], 4)
+                        enemy_rects.append(rects)
+                        enemy.update(self.player, rects[0], [rects[1], rects[2]])
+                    else:
+                        enemy.update(self.player)
 
-                    if ((enemy.rect.x+enemy.rect.width+1) > cam_view[0] and enemy.rect.x < cam_view[2]) and ((enemy.rect.y+enemy.rect.height+1) > cam_view[1] and enemy.rect.y < cam_view[3]):
-                        enemy.draw(self.win_surf, self.cam.scroll)
-                        if self.debug:
-                            pygame.draw.rect(self.win_surf, (255, 0, 0), (enemy.rect.x-self.cam.scroll[0], enemy.rect.y-self.cam.scroll[1], enemy.rect.width, enemy.rect.height), 1)
+                    #if ((enemy.rect.x+enemy.rect.width+1) > cam_view[0] and enemy.rect.x < cam_view[2]) and ((enemy.rect.y+enemy.rect.height+1) > cam_view[1] and enemy.rect.y < cam_view[3]):
+                    enemy.draw(self.win_surf, self.cam.scroll)
+                    if self.debug:
+                        pygame.draw.rect(self.win_surf, (255, 0, 0), (enemy.rect.x-self.cam.scroll[0], enemy.rect.y-self.cam.scroll[1], enemy.rect.width, enemy.rect.height), 1)
+
+                        state = self.debug_font.render(enemy.state, False, (255, 255, 255))
+                        self.win_surf.blit(state, (enemy.rect.centerx-state.get_width()/2-self.cam.scroll[0], enemy.rect.y-state.get_height()*1.1-self.cam.scroll[1]))
+
 
                     if not enemy.alive:
                         enemy = self.enemies.pop(i)
@@ -386,6 +402,14 @@ class GameManager:
                         pygame.draw.rect(self.win_surf, (255, 255, 255), (tile.x-self.cam.scroll[0], tile.y-self.cam.scroll[1], tile.width, tile.height), 1)
                     for tile in collision_rects[2]:
                         pygame.draw.rect(self.win_surf, (255, 255, 255), (tile.x-self.cam.scroll[0], tile.y-self.cam.scroll[1], tile.width, tile.height), 1)
+
+                    for rects in enemy_rects:
+                        for tile in rects[0]:
+                            pygame.draw.rect(self.win_surf, (255, 0, 0), (tile.x-self.cam.scroll[0], tile.y-self.cam.scroll[1], tile.width, tile.height), 1)
+                        for tile in rects[1]:
+                            pygame.draw.rect(self.win_surf, (255, 0, 0), (tile.x-self.cam.scroll[0], tile.y-self.cam.scroll[1], tile.width, tile.height), 1)
+                        for tile in rects[2]:
+                            pygame.draw.rect(self.win_surf, (255, 0, 0), (tile.x-self.cam.scroll[0], tile.y-self.cam.scroll[1], tile.width, tile.height), 1)
         
         text = self.debug_font.render(f"Coins: {self.level_info.coins}", False, (255, 255, 255))
         self.win_surf.blit(text, (self.win_surf.get_width()-text.get_width()*1.2, 5))

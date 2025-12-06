@@ -10,7 +10,7 @@
     },
 
     "worn katana": {
-        "damage": 0.5,
+        "damage": 1,
         "crit_rate": 0,
         "attack_cooldown": 0.1,
         "slash_info": {

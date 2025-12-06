@@ -55,7 +55,7 @@ def line_to_line_vec_collide(start,end,origin,end2):
     S = (pygame.math.Vector2(end2)-Q)
     d = R.dot((S.y, -S.x))
     if d == 0:
-        return
+        return None
     t = (Q-P).dot((S.y, -S.x))/d
     u = (Q-P).dot((R.y, -R.x))/d
     if 0 <= t <= 1 and 0 <= u <= 1:
@@ -393,6 +393,7 @@ class Entity:
         #movement variables
         self.vel = vel
         self.vel_y = 0
+        self.vel_x = 0
         self.jump_height = jump_height
         self.right = False
         self.left = False
